@@ -31,8 +31,9 @@ function trigger(target, key, value, receiver) {
   if (!depsMap) {
     return
   }
-  const effects = depsMap.get(key)
+  let effects = depsMap.get(key)
   if (effects) {
+    effects = [...effects] // vue2 中是数组，这里先拷贝再循环
     effects.forEach((effect) => {
       // 当前正在执行和现在时同一个进行屏蔽
       if (effect !== activeEffect) {

@@ -9,19 +9,22 @@
     <div id="app1"></div>
     <div id="app2"></div>
     <script type="module">
+      // import {
+      //   reactive,
+      //   effect,
+      // } from '/node_modules/@vue/reactivity/dist/reactivity.esm-browser.js'
       import { reactive, effect } from './reactivity.js'
-      const data = { name: 'jw', age: 30 }
+      const data = { name: 'jw', age: 30, flag: true }
       const state = reactive(data) // 响应式数据
       effect(() => {
-        state.age = Math.random()
-        app1.innerHTML = state.name + state.age
+        app1.innerHTML = state.flag ? state.name : state.age
       })
-      effect(() => {
-        app2.innerHTML = state.name + state.age
-      })
-      
       setTimeout(() => {
-        state.age = 50
+        state.flag = false
+        setTimeout(() => {
+          // 改了name，原则上不应该出发 effect
+          state.name = 'abc'
+        }, 1000)
       }, 1000)
     </script>
   </body>

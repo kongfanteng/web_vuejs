@@ -1,4 +1,16 @@
 export let activeEffect: ReactiveEffect = undefined
+
+function cleanupEffect(effect: ReactiveEffect) {
+  // { name: set(effect) } 属性对应的effect
+  // 找到 deps 中的 set，清理掉 effect 才可以
+  let deps = effect.deps
+  for (let i = 0; i < deps.length; i++) {
+    // effect.deps  =[newSet(),newSet(),newSet()]
+    deps[i].delete(effect) // 删除掉 set 中的 effect
+  }
+  effect.deps.length = 0 // 清空 deps
+}
+
 class ReactiveEffect {
   parent = undefined
   deps = [] // effect 中记录那些属性在 effect
@@ -8,6 +20,7 @@ class ReactiveEffect {
       this.parent = activeEffect
       // 利用js单线程特性，先放在全局，在取值
       activeEffect = this
+      cleanupEffect(this)
       // 运行时，将属性和对应effect关联
       this.fn() // 触发属性的 get
     } finally {
