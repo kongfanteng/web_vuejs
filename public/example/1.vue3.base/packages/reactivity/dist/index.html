@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app1"></div>
+    <div id="app2"></div>
+    <script type="module">
+      import { reactive, effect } from './reactivity.js'
+      const data = { name: 'jw', age: 30 }
+      const state = reactive(data) // 响应式数据
+      effect(() => {
+        state.age = Math.random()
+        app1.innerHTML = state.name + state.age
+      })
+      effect(() => {
+        app2.innerHTML = state.name + state.age
+      })
+      
+      setTimeout(() => {
+        state.age = 50
+      }, 1000)
+    </script>
+  </body>
+</html>

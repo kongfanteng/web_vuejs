@@ -15,9 +15,33 @@ export const mutableHandlers = {
   },
   set(target, key, value, receiver) {
     console.log('设置新的值时，触发更新')
-    return Reflect.set(target, key, value, receiver)
+    let oldValue = target[key]
+    let flag = Reflect.set(target, key, value, receiver)
+    if (value !== oldValue) {
+      trigger(target, key, value, receiver)
+    }
+    return flag
   },
 }
+
+function trigger(target, key, value, receiver) {
+  // { name: 'jw', age: 30 } -> name -> [effect, effect]
+  // 寻找对应 effect 执行
+  const depsMap = targetMap.get(target)
+  if (!depsMap) {
+    return
+  }
+  const effects = depsMap.get(key)
+  if (effects) {
+    effects.forEach((effect) => {
+      // 当前正在执行和现在时同一个进行屏蔽
+      if (effect !== activeEffect) {
+        effect.run()
+      }
+    })
+  }
+}
+
 // Map = {({ name: 'jw', age: 30 }): name}
 // Map = { name: set() }
 // { name: 'jw', age: 30 } -> name -> [effect, effect]
