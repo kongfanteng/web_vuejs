@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app1"></div>
+    <script type="module">
+      // import {
+      //   reactive,
+      //   effect,
+      // } from '/node_modules/@vue/reactivity/dist/reactivity.esm-browser.js'
+      import { reactive, effect } from './reactivity.js'
+      const data = { name: 'jw', age: 30, flag: true, address: { n: 100 } }
+      const state = reactive(data) // 响应式数据
+
+      let isFlushing = false
+      // 默认每次更新数据后都会重新执行，希望可以合并更新“异步更新”
+      const runner = effect(
+        () => {
+          console.log('runner')
+          // 应对 address 对象再次进行代理
+          // 懒代理
+          app1.innerHTML = state.address.n
+        },
+        {
+          scheduler() {
+            // effect.run()
+            if (!isFlushing) {
+              Promise.resolve().then(() => {
+                runner()
+                isFlushing = false
+              })
+              isFlushing = true
+            }
+          },
+        }
+      )
+      state.address.n = 504
+    </script>
+  </body>
+</html>

@@ -11,10 +11,10 @@ function cleanupEffect(effect: ReactiveEffect) {
   effect.deps.length = 0 // 清空 deps
 }
 
-class ReactiveEffect {
+export class ReactiveEffect {
   parent = undefined
   deps = [] // effect 中记录那些属性在 effect
-  constructor(public fn, public scheduler) {}
+  constructor(public fn, public scheduler?) {}
   run() {
     try {
       this.parent = activeEffect
@@ -22,7 +22,7 @@ class ReactiveEffect {
       activeEffect = this
       cleanupEffect(this)
       // 运行时，将属性和对应effect关联
-      this.fn() // 触发属性的 get
+      return this.fn() // 触发属性的 get
     } finally {
       activeEffect = undefined
       activeEffect = this.parent
@@ -30,7 +30,7 @@ class ReactiveEffect {
   }
 }
 // QR: 属性和 effect 关系？n:n
-export function effect (fn, options: any = {}) {
+export function effect(fn, options: any = {}) {
   // 用户函数变成响应式函数
   const _effect = new ReactiveEffect(fn, options.scheduler)
   // 默认执行一次

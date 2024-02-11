@@ -21,7 +21,7 @@ export const mutableHandlers = {
     return result
   },
   set(target, key, value, receiver) {
-    console.log('设置新的值时，触发更新')
+    // console.log('设置新的值时，触发更新')
     let oldValue = target[key]
     let flag = Reflect.set(target, key, value, receiver)
     if (value !== oldValue) {
@@ -39,11 +39,15 @@ function trigger(target, key, value, receiver) {
     return
   }
   let effects = depsMap.get(key)
+  triggerEffects(effects)
+}
+
+export function triggerEffects (effects) {
   if (effects) {
     effects = [...effects] // vue2 中是数组，这里先拷贝再循环
     effects.forEach((effect) => {
       // 当前正在执行和现在时同一个进行屏蔽
-      if (effect !== activeEffect) {
+      if (activeEffect !== effect) {
         if (effect.scheduler) {
           effect.scheduler()
         } else {
@@ -69,11 +73,15 @@ function track(target, key) {
     if (!dep) {
       depsMap.set(key, (dep = new Set()))
     }
-    let shouldTrack = !dep.has(activeEffect)
-    if (shouldTrack) {
-      dep.add(activeEffect)
-      activeEffect.deps.push(dep)
-      // effect 记录自有属性
-    }
+    trackEffects(dep)
+  }
+}
+
+export function trackEffects(dep) {
+  let shouldTrack = !dep.has(activeEffect)
+  if (shouldTrack) {
+    dep.add(activeEffect)
+    activeEffect.deps.push(dep)
+    // effect 记录自有属性
   }
 }
