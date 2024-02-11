@@ -14,7 +14,7 @@ function cleanupEffect(effect: ReactiveEffect) {
 class ReactiveEffect {
   parent = undefined
   deps = [] // effect 中记录那些属性在 effect
-  constructor(public fn) {}
+  constructor(public fn, public scheduler) {}
   run() {
     try {
       this.parent = activeEffect
@@ -30,9 +30,11 @@ class ReactiveEffect {
   }
 }
 // QR: 属性和 effect 关系？n:n
-export function effect(fn) {
+export function effect (fn, options: any = {}) {
   // 用户函数变成响应式函数
-  const _effect = new ReactiveEffect(fn)
+  const _effect = new ReactiveEffect(fn, options.scheduler)
   // 默认执行一次
   _effect.run()
+  const runner = _effect.run.bind(_effect)
+  return runner
 }

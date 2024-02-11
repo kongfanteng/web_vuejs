@@ -7,7 +7,6 @@
   </head>
   <body>
     <div id="app1"></div>
-    <div id="app2"></div>
     <script type="module">
       // import {
       //   reactive,
@@ -16,16 +15,32 @@
       import { reactive, effect } from './reactivity.js'
       const data = { name: 'jw', age: 30, flag: true }
       const state = reactive(data) // 响应式数据
-      effect(() => {
-        app1.innerHTML = state.flag ? state.name : state.age
-      })
-      setTimeout(() => {
-        state.flag = false
-        setTimeout(() => {
-          // 改了name，原则上不应该出发 effect
-          state.name = 'abc'
-        }, 1000)
-      }, 1000)
+
+      let isFlushing = false
+      // 默认每次更新数据后都会重新执行，希望可以合并更新“异步更新”
+      const runner = effect(
+        () => {
+          console.log('runner')
+          app1.innerHTML = state.name
+        },
+        {
+          scheduler() {
+            // effect.run()
+            if (!isFlushing) {
+              Promise.resolve().then(() => {
+                runner()
+                isFlushing = false
+              })
+              isFlushing = true
+            }
+          },
+        }
+      )
+
+      // Q：执行了3次
+      state.name = 1
+      state.name = 2
+      state.name = 3
     </script>
   </body>
 </html>

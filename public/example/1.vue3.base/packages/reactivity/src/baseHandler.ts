@@ -37,7 +37,11 @@ function trigger(target, key, value, receiver) {
     effects.forEach((effect) => {
       // 当前正在执行和现在时同一个进行屏蔽
       if (effect !== activeEffect) {
-        effect.run()
+        if (effect.scheduler) {
+          effect.scheduler()
+        } else {
+          effect.run() // 包含删除和添加的逻辑
+        }
       }
     })
   }
