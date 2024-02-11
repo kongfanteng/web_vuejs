@@ -1,4 +1,6 @@
+import { isObject } from '@vue/shared'
 import { activeEffect } from './effect'
+import { reactive } from './reactive'
 
 export const enum ReactiveFlags {
   'IS_REACTIVE' = '__v_isReactive',
@@ -11,7 +13,12 @@ export const mutableHandlers = {
       return true
     }
     track(target, key)
-    return Reflect.get(target, key, receiver)
+    let result = Reflect.get(target, key, receiver)
+    if (isObject(result)) {
+      // 如果属性是对象，递归处理
+      return reactive(result)
+    }
+    return result
   },
   set(target, key, value, receiver) {
     console.log('设置新的值时，触发更新')
