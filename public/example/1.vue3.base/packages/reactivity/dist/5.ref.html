@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      import {
+        reactive,
+        effect,
+        computed,
+        ref,
+        watchEffect,
+      } from './reactivity.js'
+      // import { reactive, effect, computed } from './reactivity.js'
+      // const flag = ref(true)
+
+      // 错误语法
+      // let state = reactive({ a: 1 })
+      // state = reactive({ a: 2 })
+      // 正确语法
+      // let state = ref({ a: 1 })
+      // state.value = { a: 2 }
+
+      // 装包
+      const state1 = reactive({ name: 'jw' })
+      const state2 = reactive({ age: 30 })
+      // 多个响应式对象转换成一个
+      const r = { name: ref(state1.name), age: ref(state2.age) }
+      watchEffect(() => {
+        app.innerHTML = r.name.value + r.age.value // 仅 reactive 导致响应式失效，需加上 ref
+      })
+      setTimeout(() => {
+        r.name.value = 'kft'
+      }, 1000)
+    </script>
+  </body>
+</html>
