@@ -8,22 +8,33 @@
 
   <body>
     <script type="module">
-      import { reactive, ref } from './vue.runtime.esm-bundler.js'
-      const state = reactive({ name: 'jw' })
-      debugger
-      state.a = ref(200)
-      state.a = 300 // 可以直接更新 ref 对应的值
-      debugger
-      delete state.name // 添加 deleteProperty
-
-      debugger
-      'name' in state // 添加 has
-      debugger
-      for (let key in state) {
-      } // 添加 ownKeys
-
-      debugger
-      state.name = 'super man' // 添加 set
+      import { reactive, effect } from './vue.runtime.esm-bundler.js'
+      let obj = {}
+      let proto = { a: 1 }
+      let proxyProto = new Proxy(proto, {
+        get(target, key, receiver) {
+          return Reflect.get(target, key, receiver)
+        },
+        set(target, key, value, receiver) {
+          if (receiver !== proxyProto) return true
+          console.log('parent proxy')
+          return Reflect.set(target, key, value, receiver) // 不要考虑原型
+        },
+      })
+      // obj.__proto__ = proxyProto
+      // let myProxy = proxy(obj)
+      Object.setPrototypeOf(obj, proxyProto) // 给 obj 赋值会触发 proxyProto 的 set
+      let myProxy = new Proxy(obj, {
+        get(target, key, receiver) {
+          return Reflect.get(target, key, receiver)
+        },
+        set(target, key, value, receiver) {
+          if (receiver !== proxyProto) return true // 注释后不打印 child proxy
+          console.log('child proxy')
+          return Reflect.set(target, key, value, receiver) // 不要考虑原型
+        },
+      })
+      myProxy.a = 100
     </script>
   </body>
 </html>
