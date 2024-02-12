@@ -10,14 +10,12 @@
     <script type="module">
       import { reactive, effect, ref } from './vue.runtime.esm-bundler.js'
       const state = reactive({ name: 'jw', a: ref(100) })
-      // 2）长度收集
-      const arr = reactive([1, 2, 3])
+      // 2）数组方法，访问变异方法会访问数组的长度，会对长度进行依赖，effect 内部停止收集调用方法
+      const arr = reactive([1])
       effect(() => {
-        // 通过索引访问可以收集依赖
-        console.log('arr.length:', arr.length)
+        arr.push({}) // 会收集 length
+        console.log('重新push')
       })
-      // debugger
-      arr[100] = 2 // 修改索引，如果是添加应该触发长度更新；如果是修改已有值，不会触发更新
     </script>
   </body>
 </html>
