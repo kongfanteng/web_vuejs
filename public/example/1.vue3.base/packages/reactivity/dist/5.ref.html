@@ -10,26 +10,16 @@
     <script type="module">
       import {
         reactive,
-        effect,
+        toRefs,
+        toRef,
         computed,
-        ref,
         watchEffect,
       } from './reactivity.js'
-      // import { reactive, effect, computed } from './reactivity.js'
-      // const flag = ref(true)
-
-      // 错误语法
-      // let state = reactive({ a: 1 })
-      // state = reactive({ a: 2 })
-      // 正确语法
-      // let state = ref({ a: 1 })
-      // state.value = { a: 2 }
-
-      // 装包
       const state1 = reactive({ name: 'jw' })
       const state2 = reactive({ age: 30 })
       // 多个响应式对象转换成一个
-      const r = { name: ref(state1.name), age: ref(state2.age) }
+      // const r = { name: toRef(state1, 'name'), age: toRef(state2, 'age') }
+      const r = { ...toRefs(state1), ...toRefs(state2) }
       watchEffect(() => {
         app.innerHTML = r.name.value + r.age.value // 仅 reactive 导致响应式失效，需加上 ref
       })
