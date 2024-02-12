@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <script type="module">
+      import { reactive, ref } from './vue.runtime.esm-bundler.js'
+      const state = reactive({ name: 'jw' })
+      debugger
+      state.a = ref(200)
+      state.a = 300 // 可以直接更新 ref 对应的值
+      debugger
+      delete state.name // 添加 deleteProperty
+
+      debugger
+      'name' in state // 添加 has
+      debugger
+      for (let key in state) {
+      } // 添加 ownKeys
+
+      debugger
+      state.name = 'super man' // 添加 set
+    </script>
+  </body>
+</html>
