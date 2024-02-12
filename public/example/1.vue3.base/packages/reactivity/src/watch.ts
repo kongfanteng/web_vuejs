@@ -17,7 +17,7 @@ function traverse(source, seen = new Set()) {
   return source
 }
 
-export function watch(source, cb, options: any = {}) {
+export function doWatch(source, cb, options) {
   let getter
   if (isReactive(source)) {
     getter = () => traverse(source)
@@ -30,14 +30,25 @@ export function watch(source, cb, options: any = {}) {
     clean = fn
   }
   const job = () => {
-    if (clean) clean()
-    const newValue = effect.run()
-    cb(newValue, oldValue, onCleanup)
-    oldValue = newValue
+    if (cb) {
+      if (clean) clean()
+      const newValue = effect.run()
+      cb(newValue, oldValue, onCleanup)
+      oldValue = newValue
+    } else {
+      effect.run()
+    }
   }
   const effect = new ReactiveEffect(getter, job)
   if (options.immediate) {
     job()
   }
   oldValue = effect.run()
+}
+
+export function watchEffect(effect, options: any = {}) {
+  doWatch(effect, null, options)
+}
+export function watch(source, cb, options: any = {}) {
+  doWatch(source, cb, options)
 }
