@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      /*
+        watch 和 computed 都是基于 effect 实现的
+        1. computed 目的在于计算新值，有缓存
+        2. watch 监控属性变化做某一件事
+      */
+      import { reactive, effect, computed, watch } from './reactivity.js'
+      // './reactivity.js'
+      // '/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
+      const state = reactive({ firstname: 'j', lastname: 'w', age: 30, n: 0 })
+      /*
+      watch(
+        state,
+        (newVal, oldVal) => {
+          console.log(newVal, oldVal)
+        },
+        {
+          immediate: true,
+        }
+      )
+      state.firstname = 'x'
+      */
+
+      /*
+        监控输入框的变化，获取数据，显示列表，竞态问题
+        1 -> 3s 返回 abc
+        2 -> 2s 返回 bcd
+        发生下次请求操作时做一些额外的清理操作
+        结果：bcd
+      */
+
+      const map = {
+        1: { time: 3000, returnVal: 'abc' },
+        2: { time: 2000, returnVal: 'bcd' },
+      }
+      function getData(newVal) {
+        console.log(newVal, map)
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            resolve(map[newVal].returnVal)
+          }, map[newVal].timer)
+        })
+      }
+
+      // 默认 watchApi 内部实现了 scheduler，改成同步
+      let arr = []
+      // 闭包：声明函数的作用域和执行上下文不是同一个
+      watch(
+        () => state.n,
+        async (newVal, oldVal, onCleanup) => {
+          let flag = true
+          onCleanup(function () {
+            flag = false
+          })
+          let r = await getData(newVal)
+          flag && (app.innerHTML = r)
+        },
+        {
+          flush: 'sync',
+        }
+      )
+      state.n++
+      state.n++
+    </script>
+  </body>
+</html>

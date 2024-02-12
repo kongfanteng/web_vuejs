@@ -24,3 +24,7 @@ function createReactiveObject(target) {
   reactiveMap.set(target, proxy)
   return proxy
 }
+
+export function isReactive(source) {
+  return !!source && source[ReactiveFlags.IS_REACTIVE]
+}
