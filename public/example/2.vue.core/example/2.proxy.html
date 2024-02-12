@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script type="module">
+      import { reactive } from './vue.runtime.esm-bundler.js'
+      // import { reactive } from '/packages/vue/dist/vue.runtime.esm-bundler.js'
+      const state = reactive({ name: 'jw' })
+      // proxy 劫持的功能
+      // 1）触发 get，进行依赖收集；
+      debugger
+      state.name
+    </script>
+  </body>
+</html>
