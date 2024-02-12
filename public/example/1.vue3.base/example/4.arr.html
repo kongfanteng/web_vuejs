@@ -10,16 +10,14 @@
     <script type="module">
       import { reactive, effect, ref } from './vue.runtime.esm-bundler.js'
       const state = reactive({ name: 'jw', a: ref(100) })
-      // 1）收集索引
-      const arr = reactive([1])
+      // 2）长度收集
+      const arr = reactive([1, 2, 3])
       effect(() => {
-        // 通过索引访问可以收集依赖 track arr 0
-        console.log(arr[3]) // 这里没有收集 length
+        // 通过索引访问可以收集依赖
+        console.log('arr.length:', arr.length)
       })
-      debugger
-      arr[0] = 2 // trigger arr 0
-      debugger
-      arr.length = 0 // 修改长度要触发索引的依赖收集，改的是 length
+      // debugger
+      arr[100] = 2 // 修改索引，如果是添加应该触发长度更新；如果是修改已有值，不会触发更新
     </script>
   </body>
 </html>
