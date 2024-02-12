@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <script type="module">
+      import { reactive, effect, ref } from './vue.runtime.esm-bundler.js'
+      const state = reactive({ name: 'jw', a: ref(100) })
+      // 1）收集索引
+      const arr = reactive([1])
+      effect(() => {
+        // 通过索引访问可以收集依赖 track arr 0
+        console.log(arr[3]) // 这里没有收集 length
+      })
+      debugger
+      arr[0] = 2 // trigger arr 0
+      debugger
+      arr.length = 0 // 修改长度要触发索引的依赖收集，改的是 length
+    </script>
+  </body>
+</html>
