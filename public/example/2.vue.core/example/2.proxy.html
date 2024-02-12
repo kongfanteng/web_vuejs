@@ -8,12 +8,13 @@
   <body>
     <script type="module">
       import { reactive } from './vue.runtime.esm-bundler.js'
-      // import { reactive } from '/packages/vue/dist/vue.runtime.esm-bundler.js'
       const state = reactive({ name: 'jw' })
-      // proxy 劫持的功能
-      // 1）触发 get，进行依赖收集；
-      debugger
-      state.name
+      // 2）处理数据的 includes 方法等
+      const data = { name: 'jw' }
+      const arr = reactive([data]) // 对象套对象，取值递归代理
+      console.log(arr[0] === data); // false; arr[0] 取得是代理对象
+      // 调用 includes 方法，内部将代理对象转为原始对象，原始对象调用 includes 方法不行再调用自定义方法
+      console.log(arr.includes(data)); // true； 正常情况不为 true，重写 includes 方法
     </script>
   </body>
 </html>
