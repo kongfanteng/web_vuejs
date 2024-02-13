@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      import { ref, effectScope, effect } from '../reactivity.js'
+      // '/node_modules/@vue/reactivity/dist/reactivity.esm-browser.js' '../reactivity.js' '/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
+
+      /*
+      const val = ref('abc')
+      const runner = effect(() => {
+        console.log(val.value)
+      })
+      setTimeout(() => {
+        val.value = 'bcd'
+      }, 1000)
+      runner.effect.stop()
+      */
+
+      const scope = effectScope()
+      scope.run(() => {
+        const val = ref('abc')
+        effect(() => {
+          console.log(val.value)
+        })
+        effect(() => {
+          console.log(val.value)
+        })
+        setTimeout(() => {
+          val.value = 'bcd'
+        }, 1000)
+        const innerScope = effectScope() //  effectScope(true) 外部停止时，内部不停止
+        innerScope.run(() => {
+          const val = ref('inner abc')
+          effect(() => {
+            console.log(val.value)
+          })
+          effect(() => {
+            console.log(val.value)
+          })
+          setTimeout(() => {
+            val.value = 'inner bcd'
+          }, 1000)
+        })
+      })
+      scope.stop() // 导致 bcd 不会触发
+    </script>
+  </body>
+</html>
