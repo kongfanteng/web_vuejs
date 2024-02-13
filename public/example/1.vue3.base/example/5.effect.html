@@ -9,13 +9,62 @@
   <body>
     <script type="module">
       import { reactive, effect, ref } from './vue.runtime.esm-bundler.js'
-      // 1. 已经是 effect 函数，再被 effect
-      let reactiveEffect = effect(() => {
-        console.log(1)
+      const state = reactive({ name: 'jw' })
+      // 2）effect 死循环问题，儿子effect调用父亲effect；
+      /*
+      const state = reactive({ a: 1 })
+      effect(function () {
+        // e0
+        console.log(state.a)
+        effect(() => {
+          // e1
+          console.log(1)
+          effect(() => {
+            // e2
+            console.log(2)
+            state.a = Math.random()
+            // debugger
+            // this.run() // e2 -> e0；进入死循环
+          })
+        })
       })
-      // debugger
-      let reactiveEffect2 = effect(reactiveEffect)
-      console.log(reactiveEffect === reactiveEffect2) // false
+      */
+
+      // 3）调试 track 和 effect
+      /*
+      effect(() => {
+        state.name
+      })
+      debugger
+      state.name = 'jiang'
+      */
+
+      // 4）调试 scheduler 函数
+      /*
+      effect(
+        () => {
+          state.name
+        },
+        {
+          scheduler: (effect) => {
+            console.log('更新')
+          },
+        }
+      )
+      debugger
+      state.name = 'jiang'
+      */
+
+      // 5）clean 清理操作
+      effect(() => {
+        console.log('rerender')
+        if (state.name === 'jw') {
+          console.log(state.age)
+        }
+      })
+      state.age = 100 // 更新
+      state.name = 'jiang' // 不要更新
+      state.age = 200 // 不更新，位运算，不是全部清理，采用位运算来计算
     </script>
   </body>
 </html>
