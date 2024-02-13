@@ -8,23 +8,18 @@
   <body>
     <div id="app"></div>
     <script type="module">
-      import {
-        reactive,
-        toRefs,
-        toRef,
-        computed,
-        watchEffect,
-      } from './reactivity.js'
+      import { reactive, toRefs, proxyRefs, watchEffect } from './reactivity.js'
+      // import { watchEffect } from '/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
+      // '/node_modules/@vue/reactivity/dist/reactivity.esm-browser.js' './reactivity.js' '/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
       const state1 = reactive({ name: 'jw' })
       const state2 = reactive({ age: 30 })
-      // 多个响应式对象转换成一个
-      // const r = { name: toRef(state1, 'name'), age: toRef(state2, 'age') }
-      const r = { ...toRefs(state1), ...toRefs(state2) }
+      // proxyRefs 后续模板编译用到，渲染时会用到
+      const r = proxyRefs({ ...toRefs(state1), ...toRefs(state2) })
       watchEffect(() => {
-        app.innerHTML = r.name.value + r.age.value // 仅 reactive 导致响应式失效，需加上 ref
+        app.innerHTML = r.name + r.age
       })
       setTimeout(() => {
-        r.name.value = 'kft'
+        r.name = 'kft'
       }, 1000)
     </script>
   </body>

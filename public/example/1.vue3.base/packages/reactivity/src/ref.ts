@@ -8,6 +8,7 @@ export function ref(value) {
 
 class RefImpl {
   _value
+  __v_isRef = true
   dep = new Set()
   constructor(public rawValue) {
     this._value = toReactive(rawValue)
@@ -29,6 +30,7 @@ class RefImpl {
 }
 
 class ObjectRefImpl {
+  __v_isRef = true
   constructor(public object, public key) {}
   get value() {
     return this.object[this.key]
@@ -47,4 +49,21 @@ export function toRefs(object) {
     res[key] = toRef(object, key)
   }
   return res
+}
+export function proxyRefs(target) {
+  return new Proxy(target, {
+    get(target, key, receiver) {
+      let r = Reflect.get(target, key, receiver)
+      return r.__v_isRef ? r.value : r
+    },
+    set(target, key, value, receiver) {
+      const oldValue = target[key]
+      if (oldValue.__v_isRef) {
+        oldValue.value = value
+        return true
+      } else {
+        return Reflect.set(target, key, value, receiver)
+      }
+    },
+  })
 }
