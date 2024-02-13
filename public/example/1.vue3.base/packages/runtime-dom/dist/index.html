@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // vue 在 runtime-dom 中提供的一个方法，这个方法运行用户自定义渲染方式
+      // mpvue 基于 vue 改造了一个小程序版本 this.setData({})
+      // 针对 canvas 进行渲染，自定义渲染方式
+      import {
+        createRenderer,
+        h,
+      } from '/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
+
+      // 虚拟 dom 好处：跨平台，{ div, 属性, 内容 } 可以做 diff 方法
+      // 核心利用渲染器渲染虚拟 dom
+      const VDom = h('div', 'hello kft')
+      const renderer = createRenderer({
+        insert(element, container) {
+          container.appendChild(element)
+        },
+        createElement(element) {
+          return document.createElement(element)
+        },
+        setElementText(element, text) {
+          element.innerHTML = text
+        },
+      })
+      renderer.render(VDom, app)
+    </script>
+  </body>
+</html>
