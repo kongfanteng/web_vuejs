@@ -17,13 +17,30 @@
       // 核心利用渲染器渲染虚拟 dom
       // const VDom = h('div')
       // const VDom = h('div', h('hello kft'))
+      // const VDom = h('div', h('hello kft'), h('hello kft')) // 错误写法会被认为第二个参数是属性
       // const VDom = h('div', { style: { color: 'red'  } })
       // const VDom = h('div', {}, [h('span'), h('span')])
       // const VDom = h('div', h('span'), h('span'))
       // const VDom = h('div', {}, h('span'), h('span'))
-      const VDom = h('div', {}, ['hello kft', 'hello kft', 'hello kft'])
-      console.log('VDom:', VDom)
-      render({}, app) // 常用 render 在弹框组件
+      const VDom1 = h('div', { style: { background: 'red' } }, [
+        h('span', 'hello kft'),
+        h('span', 'hello kft'),
+        h('span', 'hello kft'),
+      ])
+      const VDom2 = h('p', { style: { background: 'red' } }, [
+        h('span', 'hello kft'),
+        h('span', 'hello kft'),
+        h('span', 'hello kft'),
+      ])
+      // const VDom = h('div', 'hello kft')
+      // const VDom = h('div', {}, 'hello kft')
+      // const VDom = h('div', {}, ['hello kft', 'hello kft', 'hello kft'])
+      // const VDom = h('div', {}, 'hello kft', 'hello kft', 'hello kft')
+      render(VDom1, app) // 常用 render 在弹框组件
+      setTimeout(() => {
+        render(VDom2, app)
+      }, 1000)
+      // render(VDom2, app) // 常用 render 在弹框组件
     </script>
   </body>
 </html>
