@@ -12,16 +12,17 @@
       // mpvue 基于 vue 改造了一个小程序版本 this.setData({})
       // 针对 canvas 进行渲染，自定义渲染方式
       import { h, render } from './runtime-dom.js'
-      console.log('h, render:', h, render)
 
       // 虚拟 dom 好处：跨平台，{ div, 属性, 内容 } 可以做 diff 方法
       // 核心利用渲染器渲染虚拟 dom
-      const VDom = h('div')
-      // const VDom = h('div', 'hello kft')
-      // const VDom = h('div', {}, 'hello kft')
-      // const VDom = h('div', {}, ['hello kft', 'hello kft', 'hello kft'])
-      // const VDom = h('div', {}, 'hello kft', 'hello kft', 'hello kft')
-
+      // const VDom = h('div')
+      // const VDom = h('div', h('hello kft'))
+      // const VDom = h('div', { style: { color: 'red'  } })
+      // const VDom = h('div', {}, [h('span'), h('span')])
+      // const VDom = h('div', h('span'), h('span'))
+      // const VDom = h('div', {}, h('span'), h('span'))
+      const VDom = h('div', {}, ['hello kft', 'hello kft', 'hello kft'])
+      console.log('VDom:', VDom)
       render({}, app) // 常用 render 在弹框组件
     </script>
   </body>
