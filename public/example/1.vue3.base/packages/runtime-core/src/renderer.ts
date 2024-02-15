@@ -23,6 +23,13 @@ export function createRenderer(options) {
     }
   }
 
+  const unmountChildren = (children) => {
+    for (let i = 0; i < children.length; i++) {
+      // 递归调用 patch 方法，卸载元素
+      unmount(children[i])
+    }
+  }
+
   const unmount = (vnode) => {
     // 后面要卸载的元素可能不是元素
     hostRemove(vnode.el)
@@ -46,11 +53,99 @@ export function createRenderer(options) {
     }
     hostInsert(el, container) // 将元素插入到父级中
   }
+
+  const patchProps = (oldProps, newProps, el) => {
+    for (let key in newProps) {
+      // 用新的生效
+      hostPatchProp(el, key, oldProps[key], newProps[key])
+    }
+    // 老的里面有新的没有则删除
+    for (let key in oldProps) {
+      if (!(key in newProps)) {
+        hostPatchProp(el, key, oldProps[key], null)
+      }
+    }
+  }
+
+  const patchKeyChildren = (c1, c2, el) => {
+    // 有优点的点，dom 操作常见的方式；1）前后增加，前后删除；
+    // 如果不优化，那就比较 c1,c2 的差异循环即可
+    // form start
+    let i = 0 // 头部牵引
+    let e1 = c1.length - 1
+    let e2 = c2.length - 1
+    while (i <= e1 && i <= e2) {
+      const n1 = c1[i]
+      const n2 = c2[i]
+      if (isSameVnode(n1, n2)) {
+      }
+      i++
+    }
+    // from end
+    // a, b, c
+    // a, b, c, d
+    // a, b, c
+    // d, a, b, c
+  }
+
+  const patchChildren = (n1, n2, el) => {
+    // 比较前后 2 个节点的差异
+    let c1 = n1.children
+    let c2 = n2.children
+
+    let prevShapeFlag = n1.shapeFlag // 上一次
+    let shapeFlag = n2.shapeFlag // 新的一次
+
+    // 文本 数组 空 = 9 种
+
+    // （文本 -> 数组）；文本删除掉，换成数组；
+    // （文本 -> 空）；清空文本；（文本 -> 文本）；用新文本换老文本；
+
+    // （数组 -> 文本）（数组 -> 空）移除数组，换成文本；
+    // （数组 -> 数组）；（diff）；
+
+    // （空 -> 文本）；更新文本；
+    // （空 -> 数组）；挂载数组；
+    // （空 -> 空）；无需处理；
+
+    if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+      if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        // 1. （文本 -> 数组）；文本删除掉，换成数组；
+        unmountChildren(c1)
+      }
+      if (c1 !== c2) {
+        // 2. （文本 -> 空）；清空文本；（文本 -> 文本）；用新文本换老文本；
+        hostSetElementText(el, c2)
+      }
+    } else {
+      if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+          // 3. （数组 -> 数组）；（diff）；
+          console.log('diff')
+          patchKeyChildren(c1, c2, el)
+        } else {
+          // 4. （数组 -> 文本）（数组 -> 空）移除数组，换成文本；
+          unmountChildren(c1)
+        }
+      } else {
+        if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+          // 5. （文本 -> 空）；清空文本
+          hostSetElementText(el, '')
+        }
+
+        if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+          // 6. （空 -> 数组）；挂载数组；
+          mountChildren(c2, el)
+        }
+      }
+    }
+  }
+
   const patchElement = (n1, n2, container) => {
-    // 1. 判断是否是文本节点
-    // 2. 判断是否是元素节点
-    // 3. 判断是否是组件节点
-    // 4. 判断是否是文本节点
+    // 更新逻辑
+    let el = (n2.el = n1.el)
+    patchProps(n1.props || {}, n2.props || {}, el)
+    patchChildren(n1, n2, el)
   }
 
   // patch 方法每次更新都会重新的执行
