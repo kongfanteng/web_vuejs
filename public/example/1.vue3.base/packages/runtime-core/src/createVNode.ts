@@ -19,7 +19,7 @@ export function createVNode(type, props, children = null) {
     type,
     props,
     key: props && props.key,
-    ref: null,
+    el: null,
     children,
   }
 
@@ -28,6 +28,7 @@ export function createVNode(type, props, children = null) {
     if (Array.isArray(children)) {
       type = ShapeFlags.ARRAY_CHILDREN
     } else {
+      vnode.children = String(children)
       type = ShapeFlags.TEXT_CHILDREN
     }
     vnode.shapeFlag |= type

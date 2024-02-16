@@ -1,5 +1,5 @@
-import { ShapeFlags } from '@vue/shared'
-import { Text, isSameVnode } from './createVNode'
+import { ShapeFlags, isNumber, isString } from '@vue/shared'
+import { Text, createVNode, isSameVnode } from './createVNode'
 
 export function createRenderer(options) {
   // 此方法并不关心  options 有谁提供
@@ -15,11 +15,20 @@ export function createRenderer(options) {
     patchProp: hostPatchProp,
   } = options
 
+  function convert(child) {
+    if (isString(child) || isNumber(child)) {
+      return createVNode(Text, null, child)
+    } else {
+      return child
+    }
+  }
+
   // 挂载所有子节点，子节点不一定是元素，还有可能是组件
   const mountChildren = (children, container, anchor) => {
     for (let i = 0; i < children.length; i++) {
+      const child = convert(children[i])
       // 递归调用 patch 方法，创建元素
-      patch(null, children[i], container, anchor)
+      patch(null, child, container, anchor)
     }
   }
 
@@ -306,9 +315,9 @@ export function createRenderer(options) {
     if (n1 == null) {
       hostInsert((n2.el = hostCreateText(n2.children)), container)
     } else {
-      n2.el = n1.el
+      let el = (n2.el = n1.el)
       if (n2.children !== n1.children) {
-        hostSetText(n2.children)
+        hostSetText(el, n2.children)
       }
     }
   }
@@ -323,7 +332,6 @@ export function createRenderer(options) {
     const { type } = n2
     switch (type) {
       case Text:
-        debugger
         processText(n1, n2, container)
         break
       default:

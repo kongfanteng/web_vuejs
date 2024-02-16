@@ -8,6 +8,10 @@ export function isString(val) {
   return typeof val === 'string'
 }
 
+export function isNumber(val) {
+  return typeof val === 'number'
+}
+
 export enum ShapeFlags {
   ELEMENT = 1, // 元素
   FUNCTIONAL_COMPONENT = 1 << 1, // 2
