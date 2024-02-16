@@ -8,39 +8,33 @@
   <body>
     <div id="app"><span></span></div>
     <script type="module">
-      // vue 在 runtime-dom 中提供的一个方法，这个方法运行用户自定义渲染方式
-      // mpvue 基于 vue 改造了一个小程序版本 this.setData({})
-      // 针对 canvas 进行渲染，自定义渲染方式
       import { h, render } from './runtime-dom.js'
 
-      // 虚拟 dom 好处：跨平台，{ div, 属性, 内容 } 可以做 diff 方法
-      // 核心利用渲染器渲染虚拟 dom
-      // const VDom = h('div')
-      // const VDom = h('div', h('hello kft'))
-      // const VDom = h('div', h('hello kft'), h('hello kft')) // 错误写法会被认为第二个参数是属性
-      // const VDom = h('div', { style: { color: 'red'  } })
-      // const VDom = h('div', {}, [h('span'), h('span')])
-      // const VDom = h('div', h('span'), h('span'))
-      // const VDom = h('div', {}, h('span'), h('span'))
       const VDom1 = h('div', { style: { background: 'red' } }, [
-        h('span', 'hello kft'),
-        h('span', 'hello kft'),
-        h('span', 'hello kft'),
+        h('div', { key: 'a' }, 'a'),
+        h('div', { key: 'b' }, 'b'),
+        h('div', { key: 'c', style: { color: 'red' } }, 'c'),
+        h('div', { key: 'd' }, 'd'),
+        h('div', { key: 'e' }, 'e'),
+        h('div', { key: 'q' }, 'q'),
+        h('div', { key: 'f' }, 'f'),
+        h('div', { key: 'g' }, 'g'),
       ])
-      const VDom2 = h('div', { style: { color: 'blue' } }, [
-        h('span', 'hello kft2222'),
-        h('span', 'hello kft'),
-        h('span', 'hello kft'),
+      const VDom2 = h('div', { style: { background: 'red' } }, [
+        h('div', { key: 'a' }, 'a'),
+        h('div', { key: 'b' }, 'b'),
+        h('div', { key: 'e' }, 'e'),
+        h('div', { key: 'c', style: { color: 'blue' } }, 'c'),
+        h('div', { key: 'd' }, 'd'),
+        h('div', { key: 'h' }, 'h'),
+        h('div', { key: 'f' }, 'f'),
+        h('div', { key: 'g' }, 'g'),
       ])
-      // const VDom = h('div', 'hello kft')
-      // const VDom = h('div', {}, 'hello kft')
-      // const VDom = h('div', {}, ['hello kft', 'hello kft', 'hello kft'])
-      // const VDom = h('div', {}, 'hello kft', 'hello kft', 'hello kft')
-      render(VDom1, app) // 常用 render 在弹框组件
+
+      render(VDom1, app)
       setTimeout(() => {
         render(VDom2, app)
       }, 1000)
-      // render(VDom2, app) // 常用 render 在弹框组件
     </script>
   </body>
 </html>
