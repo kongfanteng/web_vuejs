@@ -1,5 +1,6 @@
 import { ShapeFlags, isString } from '@vue/shared'
 
+export const Text = Symbol('Text')
 export function isVNode(val) {
   return !!(val && val.__v_isVNode)
 }

@@ -8,33 +8,13 @@
   <body>
     <div id="app"><span></span></div>
     <script type="module">
-      import { h, render } from './runtime-dom.js'
-
-      const VDom1 = h('div', { style: { background: 'red' } }, [
-        h('div', { key: 'a' }, 'a'),
-        h('div', { key: 'b' }, 'b'),
-        h('div', { key: 'c', style: { color: 'red' } }, 'c'),
-        h('div', { key: 'd' }, 'd'),
-        h('div', { key: 'e' }, 'e'),
-        h('div', { key: 'q' }, 'q'),
-        h('div', { key: 'f' }, 'f'),
-        h('div', { key: 'g' }, 'g'),
-      ])
-      const VDom2 = h('div', { style: { background: 'red' } }, [
-        h('div', { key: 'a' }, 'a'),
-        h('div', { key: 'b' }, 'b'),
-        h('div', { key: 'e' }, 'e'),
-        h('div', { key: 'c', style: { color: 'blue' } }, 'c'),
-        h('div', { key: 'd' }, 'd'),
-        h('div', { key: 'h' }, 'h'),
-        h('div', { key: 'f' }, 'f'),
-        h('div', { key: 'g' }, 'g'),
-      ])
-
-      render(VDom1, app)
-      setTimeout(() => {
-        render(VDom2, app)
-      }, 1000)
+      import { h, render, Text } from './runtime-dom.js'
+      const VNode = h(Text, {}, 'hello1')
+      render(VNode, app)
+      // setTimeout(() => {
+      //   const VNode1 = h(Text, {}, 'hello1 1111')
+      //   render(VNode1, app)
+      // }, 1000)
     </script>
   </body>
 </html>
