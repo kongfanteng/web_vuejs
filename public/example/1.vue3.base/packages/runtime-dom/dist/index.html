@@ -6,15 +6,13 @@
     <title>Document</title>
   </head>
   <body>
-    <div id="app"><span></span></div>
+    <div id="app"></div>
     <script type="module">
-      import { h, render, Text } from './runtime-dom.js'
-      const VNode = h(Text, {}, ['hello1', 'hello2'])
+      import { h, render, Text, Fragment } from './runtime-dom.js'
+      const VNode = h(Fragment, {}, ['hello1', 'hello2'])
       render(VNode, app)
-      setTimeout(() => {
-        const VNode1 = h(Text, {}, 'hello1 1111')
-        render(VNode1, app)
-      }, 1000)
+      // const VNode1 = h(Text, {}, 'hello1 1111')
+      // render(VNode1, app)
     </script>
   </body>
 </html>

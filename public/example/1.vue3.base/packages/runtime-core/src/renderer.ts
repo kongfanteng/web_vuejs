@@ -1,5 +1,11 @@
 import { ShapeFlags, isNumber, isString } from '@vue/shared'
-import { Text, createVNode, isSameVnode } from './createVNode'
+import {
+  Fragment,
+  Text,
+  convert,
+  createVNode,
+  isSameVnode,
+} from './createVNode'
 
 export function createRenderer(options) {
   // 此方法并不关心  options 有谁提供
@@ -15,16 +21,8 @@ export function createRenderer(options) {
     patchProp: hostPatchProp,
   } = options
 
-  function convert(child) {
-    if (isString(child) || isNumber(child)) {
-      return createVNode(Text, null, child)
-    } else {
-      return child
-    }
-  }
-
   // 挂载所有子节点，子节点不一定是元素，还有可能是组件
-  const mountChildren = (children, container, anchor) => {
+  const mountChildren = (children, container, anchor?) => {
     for (let i = 0; i < children.length; i++) {
       const child = convert(children[i])
       // 递归调用 patch 方法，创建元素
@@ -121,7 +119,7 @@ export function createRenderer(options) {
     return result
   }
 
-  const patchKeyChildren = (c1, c2, el, anchor) => {
+  const patchKeyChildren = (c1, c2, el, anchor?) => {
     // 有优点的点，dom 操作常见的方式；1）前后增加，前后删除；
     // 如果不优化，那就比较 c1,c2 的差异循环即可
     // form start
@@ -322,6 +320,14 @@ export function createRenderer(options) {
     }
   }
 
+  function processFragment(n1, n2, container) {
+    if (n1 == null) {
+      mountChildren(n2.children, container)
+    } else {
+      patchKeyChildren(n1, n2, container)
+    }
+  }
+
   // patch 方法每次更新都会重新的执行
   const patch = (n1, n2, container, anchor = null) => {
     // n1 和 n2 是不是相同的节点，如果不是相同节点直接删除掉，换新的
@@ -333,6 +339,9 @@ export function createRenderer(options) {
     switch (type) {
       case Text:
         processText(n1, n2, container)
+        break
+      case Fragment:
+        processFragment(n1, n2, container)
         break
       default:
         processElement(n1, n2, container, anchor)
