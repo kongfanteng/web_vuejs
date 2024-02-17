@@ -1,6 +1,7 @@
 import { ShapeFlags } from '@vue/shared'
 import { Fragment, Text, convert, isSameVnode } from './createVNode'
 import { reactive, ReactiveEffect } from '@vue/reactivity'
+import { queueJob } from './scheduler'
 
 export function createRenderer(options) {
   // 此方法并不关心  options 有谁提供
@@ -349,7 +350,9 @@ export function createRenderer(options) {
         instance.subTree = subTree
       }
     }
-    const effect = new ReactiveEffect(componentUpdateFn)
+    const effect = new ReactiveEffect(componentUpdateFn, () => {
+      queueJob(instance.update)
+    })
     const update = (instance.update = effect.run.bind(effect))
     update()
   }
