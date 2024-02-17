@@ -9,27 +9,24 @@
     <div id="app"></div>
     <script type="module">
       import { h, render } from './runtime-dom.js'
-      // import {
-      //   h,
-      //   render,
-      // } from '/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
-
+      // $attrs = all; Props - $props;
       const MyComponent = {
+        props: {
+          a: Number,
+          b: Number,
+        },
         data() {
           return { name: 'kft', age: 30 }
         },
         render(proxy) {
-          setTimeout(() => {
-            proxy.age++
-            proxy.age++
-          }, 1000)
           return h('div', {}, [
-            h('span', proxy.name + '：'),
-            h('span', proxy.age),
+            h('span', proxy.a + '：'),
+            h('span', proxy.b + '：'),
+            h('span', proxy.$attrs.c),
           ])
         },
       }
-      render(h(MyComponent), app)
+      render(h(MyComponent, { a: 1, b: 2, c: 3 }), app)
     </script>
   </body>
 </html>

@@ -1,7 +1,8 @@
 import { ShapeFlags } from '@vue/shared'
 import { Fragment, Text, convert, isSameVnode } from './createVNode'
-import { reactive, ReactiveEffect } from '@vue/reactivity'
+import { ReactiveEffect } from '@vue/reactivity'
 import { queueJob } from './scheduler'
+import { createInstance, setupComponent } from './component'
 
 export function createRenderer(options) {
   // 此方法并不关心  options 有谁提供
@@ -320,41 +321,39 @@ export function createRenderer(options) {
     if (n1 == null) {
       mountChildren(n2.children, container)
     } else {
-      patchKeyChildren(n1, n2, container)
+      patchChildren(n1, n2, container)
     }
   }
 
-  function mountComponent(n2, container) {
-    // 拿到用户的数据和渲染函数
-    let { data = () => ({}), render } = n2.type
-    const state = reactive(data())
-    const instance = {
-      // 组件的实例，记录组件中属性
-      state,
-      isMounted: false, // 是否挂载成功
-      vnode: n2, // 组件的虚拟节点
-      subTree: null, // 组件渲染的虚拟节点
-      update: null, // 组件更新方法
-    }
-    // 每个组件都要有一个effect函数
+  function setupRenderEffect(instance, container) {
     const componentUpdateFn = () => {
       if (!instance.isMounted) {
-        const subTree = render.call(state, state)
+        const subTree = instance.render.call(instance.proxy, instance.proxy)
         instance.subTree = subTree
         patch(null, subTree, container)
         instance.isMounted = true
       } else {
         // 组件更新，自身的状态变更了要更新子树
-        const subTree = render.call(state, state)
+        const subTree = instance.render.call(instance.proxy, instance.proxy)
         patch(instance.subTree, subTree, container)
         instance.subTree = subTree
       }
     }
-    const effect = new ReactiveEffect(componentUpdateFn, () => {
+    // 每个组件都要有一个effect函数
+    const effect = new ReactiveEffect(componentUpdateFn, () =>
       queueJob(instance.update)
-    })
+    )
     const update = (instance.update = effect.run.bind(effect))
     update()
+  }
+
+  function mountComponent(n2, container) {
+    // 1）给组件生成一个实例 instance
+    const instance = (n2.component = createInstance(n2))
+    // 2）初始化实例属性 props attr slots
+    setupComponent(instance)
+    // 3）生成一个 effect 并调用渲染
+    setupRenderEffect(instance, container)
   }
 
   function processComponent(n1, n2, container) {
