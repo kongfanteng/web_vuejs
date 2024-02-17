@@ -8,11 +8,29 @@
   <body>
     <div id="app"></div>
     <script type="module">
-      import { h, render, Text, Fragment } from './runtime-dom.js'
-      const VNode = h(Fragment, {}, ['hello1', 'hello2'])
-      render(VNode, app)
-      // const VNode1 = h(Text, {}, 'hello1 1111')
-      // render(VNode1, app)
+      import { h, render } from './runtime-dom.js'
+      // import {
+      //   h,
+      //   render,
+      // } from '/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
+
+      // 组件数据，有状态和属性；
+      // QR：组件的核心？组成（状态、属性），事件，生命周期，插槽（WebComponent）；
+      // QR：为什么要有组件？复用
+      // QR：this 的问题？this 指向不明确；this 使用时无法推断（ts 支持差）；不支持 tree-shaking；
+      const MyComponent = {
+        data() {
+          return { name: 'kft', age: 30 }
+        },
+        // 模板的编译：把模板 -> render 返回的结果 -> 虚拟 DOM（h 方法返回的虚拟DOM）-> 渲染真实 DOM
+        render(proxy) {
+          setTimeout(() => {
+            proxy.age++
+          }, 1000)
+          return h('div', {}, proxy.name + '：' + proxy.age)
+        },
+      }
+      render(h(MyComponent), app)
     </script>
   </body>
 </html>

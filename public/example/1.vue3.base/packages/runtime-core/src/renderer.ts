@@ -1,11 +1,6 @@
-import { ShapeFlags, isNumber, isString } from '@vue/shared'
-import {
-  Fragment,
-  Text,
-  convert,
-  createVNode,
-  isSameVnode,
-} from './createVNode'
+import { ShapeFlags } from '@vue/shared'
+import { Fragment, Text, convert, isSameVnode } from './createVNode'
+import { reactive, ReactiveEffect } from '@vue/reactivity'
 
 export function createRenderer(options) {
   // 此方法并不关心  options 有谁提供
@@ -328,6 +323,45 @@ export function createRenderer(options) {
     }
   }
 
+  function mountComponent(n2, container) {
+    // 拿到用户的数据和渲染函数
+    let { data = () => ({}), render } = n2.type
+    const state = reactive(data())
+    const instance = {
+      // 组件的实例，记录组件中属性
+      state,
+      isMounted: false, // 是否挂载成功
+      vnode: n2, // 组件的虚拟节点
+      subTree: null, // 组件渲染的虚拟节点
+      update: null, // 组件更新方法
+    }
+    // 每个组件都要有一个effect函数
+    const componentUpdateFn = () => {
+      if (!instance.isMounted) {
+        const subTree = render.call(state, state)
+        instance.subTree = subTree
+        patch(null, subTree, container)
+        instance.isMounted = true
+      } else {
+        // 组件更新，自身的状态变更了要更新子树
+        const subTree = render.call(state, state)
+        patch(instance.subTree, subTree, container)
+        instance.subTree = subTree
+      }
+    }
+    const effect = new ReactiveEffect(componentUpdateFn)
+    const update = (instance.update = effect.run.bind(effect))
+    update()
+  }
+
+  function processComponent(n1, n2, container) {
+    if (n1 == null) {
+      mountComponent(n2, container)
+    } else {
+      // patchComponent(n1, n2, container)
+    }
+  }
+
   // patch 方法每次更新都会重新的执行
   const patch = (n1, n2, container, anchor = null) => {
     // n1 和 n2 是不是相同的节点，如果不是相同节点直接删除掉，换新的
@@ -335,7 +369,7 @@ export function createRenderer(options) {
       unmount(n1) // 不是初始化，意味更新
       n1 = null // 删除之前的，继续走初始化流程
     }
-    const { type } = n2
+    const { type, shapeFlag } = n2
     switch (type) {
       case Text:
         processText(n1, n2, container)
@@ -344,7 +378,12 @@ export function createRenderer(options) {
         processFragment(n1, n2, container)
         break
       default:
-        processElement(n1, n2, container, anchor)
+        if (shapeFlag & ShapeFlags.ELEMENT) {
+          processElement(n1, n2, container, anchor)
+        } else if (shapeFlag & ShapeFlags.COMPONENT) {
+          // 函数式组件待补充
+          processComponent(n1, n2, container)
+        }
     }
   }
 

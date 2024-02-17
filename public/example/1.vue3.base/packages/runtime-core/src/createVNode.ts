@@ -1,4 +1,4 @@
-import { ShapeFlags, isNumber, isString } from '@vue/shared'
+import { ShapeFlags, isNumber, isObject, isString } from '@vue/shared'
 
 export const Text = Symbol('Text')
 export const Fragment = Symbol('Fragment')
@@ -24,7 +24,11 @@ export function normalizeChildren(children) {
 
 export function createVNode(type, props, children = null) {
   // React.createElement
-  const shapeFlag = isString(type) ? ShapeFlags.ELEMENT : 0
+  const shapeFlag = isString(type)
+    ? ShapeFlags.ELEMENT // 元素
+    : isObject(type)
+    ? ShapeFlags.STATEFUL_COMPONENT // 组件
+    : 0
 
   const vnode = {
     shapeFlag,
