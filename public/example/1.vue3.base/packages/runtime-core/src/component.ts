@@ -4,7 +4,7 @@ import { initProps } from './componentProps'
 export function createInstance(n2) {
   const instance = {
     // 组件的实例，记录组件中属性
-    state: null,
+    state: {},
     isMounted: false, // 是否挂载成功
     vnode: n2, // 组件的虚拟节点
     subTree: null, // 组件渲染的虚拟节点

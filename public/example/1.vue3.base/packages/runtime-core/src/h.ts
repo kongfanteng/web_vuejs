@@ -6,7 +6,7 @@ export function h(type, propsOrChildren, children) {
   const len = arguments.length
   if (len == 2) {
     // createVNode 要求儿子为文本或数组
-    if (isObject(propsOrChildren)) {
+    if (isObject(propsOrChildren) && !Array.isArray(propsOrChildren)) {
       if (isVNode(propsOrChildren)) {
         // const VDom = h('div', h('hello'))
         return createVNode(type, null, [propsOrChildren])

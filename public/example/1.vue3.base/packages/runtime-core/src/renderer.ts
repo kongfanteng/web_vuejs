@@ -3,6 +3,7 @@ import { Fragment, Text, convert, isSameVnode } from './createVNode'
 import { ReactiveEffect } from '@vue/reactivity'
 import { queueJob } from './scheduler'
 import { createInstance, setupComponent } from './component'
+import { hasChangedProps, updateProps } from './componentProps'
 
 export function createRenderer(options) {
   // 此方法并不关心  options 有谁提供
@@ -325,6 +326,12 @@ export function createRenderer(options) {
     }
   }
 
+  function updateComponentPreRender(instance, next) {
+    instance.next = null
+    instance.vnode = next // 这里为了保证 vnode 更新
+    updateProps(instance.props, next.props)
+  }
+
   function setupRenderEffect(instance, container) {
     const componentUpdateFn = () => {
       if (!instance.isMounted) {
@@ -333,6 +340,11 @@ export function createRenderer(options) {
         patch(null, subTree, container)
         instance.isMounted = true
       } else {
+        let next = instance.next
+        if (next) {
+          updateComponentPreRender(instance, next)
+        }
+
         // 组件更新，自身的状态变更了要更新子树
         const subTree = instance.render.call(instance.proxy, instance.proxy)
         patch(instance.subTree, subTree, container)
@@ -356,11 +368,31 @@ export function createRenderer(options) {
     setupRenderEffect(instance, container)
   }
 
+  function shouldComponentUpdate(n1, n2) {
+    const prevProps = n1.props
+    const nextProps = n2.props
+    return hasChangedProps(prevProps, nextProps)
+  }
+
+  function patchComponent(n1, n2, container) {
+    const instance = (n2.component = n1.component)
+    // const prevProps = n1.props
+    // const nextProps = n2.props
+
+    // 在这里出发，componentUpdateFn 函数让他去处理更新
+    if (shouldComponentUpdate(n1, n2)) {
+      instance.next = n2
+      instance.update()
+    }
+
+    // updateProps(instance, prevProps, nextProps)
+  }
+
   function processComponent(n1, n2, container) {
     if (n1 == null) {
       mountComponent(n2, container)
     } else {
-      // patchComponent(n1, n2, container)
+      patchComponent(n1, n2, container)
     }
   }
 

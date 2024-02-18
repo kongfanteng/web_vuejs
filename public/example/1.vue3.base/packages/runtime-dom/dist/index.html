@@ -8,25 +8,36 @@
   <body>
     <div id="app"></div>
     <script type="module">
-      import { h, render } from './runtime-dom.js'
-      // $attrs = all; Props - $props;
-      const MyComponent = {
+      import { h, render, Text } from './runtime-dom.js'
+      const ChildComponent = {
+        // data: () => ({}),
         props: {
-          a: Number,
-          b: Number,
-        },
-        data() {
-          return { name: 'kft', age: 30 }
+          count: Number,
         },
         render(proxy) {
-          return h('div', {}, [
-            h('span', proxy.a + '：'),
-            h('span', proxy.b + '：'),
-            h('span', proxy.$attrs.c),
+          return h(Text, proxy.count)
+        },
+      }
+      const ParentComponent = {
+        data() {
+          return { count: 0 }
+        },
+        render(proxy) {
+          return h('div', [
+            h(ChildComponent, { count: proxy.count }),
+            h(
+              'button',
+              {
+                onClick: () => {
+                  proxy.count++
+                },
+              },
+              '点我啊'
+            ),
           ])
         },
       }
-      render(h(MyComponent, { a: 1, b: 2, c: 3 }), app)
+      render(h(ParentComponent), app)
     </script>
   </body>
 </html>
