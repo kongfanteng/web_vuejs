@@ -1,6 +1,6 @@
 import { proxyRefs, reactive } from '@vue/reactivity'
 import { initProps } from './componentProps'
-import { isObject } from '@vue/shared'
+import { isFunction, isObject } from '@vue/shared'
 
 export function createInstance(n2) {
   const instance = {
@@ -59,10 +59,22 @@ export function setupComponent(instance) {
 
   const setup = type.setup
   if (setup) {
-    const setupResult = setup()
+    const setupResult = setup(instance.props, {
+      attrs: instance.attrs,
+      emit: (eventName, ...args) => {
+        // onMyEvent onMyEvent
+        let handler =
+          props[`on${eventName[0].toUpperCase()}${eventName.slice(1)}`]
+        handler && handler(...args)
+      },
+      slots: instance.slots,
+      expose: () => {},
+    })
     if (isObject(setupResult)) {
       // 返回 setup 提供的数据源头
       instance.setupState = proxyRefs(setupResult)
+    } else if (isFunction(setupResult)) {
+      instance.render = setupResult
     }
   }
 
@@ -70,5 +82,5 @@ export function setupComponent(instance) {
   if (data) {
     instance.state = reactive(data())
   }
-  instance.render = type.render
+  !instance.render && (instance.render = type.render)
 }

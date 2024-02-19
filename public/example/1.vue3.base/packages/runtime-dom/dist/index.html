@@ -18,38 +18,41 @@
       } from './runtime-dom.js'
       const ChildComponent = {
         props: {
-          count: Number,
+          count: Object,
         },
         render(proxy) {
-          return h(Text, proxy.count)
+          return h(Text, proxy.count.count)
         },
       }
 
       const ParentComponent = {
-        setup() {
-          const state = reactive({ count: 0 })
-          const double = computed(() => state.count * 2)
-          return {
-            ...toRefs(state),
-            double,
-          }
+        props: {
+          a: Number,
         },
-        render(proxy) {
-          return h('div', [
-            h(ChildComponent, { count: proxy.count }),
-            h(
-              'button',
-              {
-                onClick: () => {
-                  proxy.count++
+        // setup 1) 可以返回一个对象，作为 proxy 的数据源；2）返回一个渲染函数可以用作渲染逻辑；
+        setup(props, ctx) {
+          const state = reactive({ count: props.a })
+          const double = computed(() => state.count * 2)
+          return () =>
+            h('div', [
+              h(ChildComponent, { count: { count: state.count } }),
+              h(
+                'button',
+                {
+                  onClick: () => {
+                    // state.count++
+                    ctx.emit('myEvent', 100)
+                  },
                 },
-              },
-              '点我啊' + proxy.double
-            ),
-          ])
+                '点我啊' + double.value
+              ),
+            ])
         },
       }
-      render(h(ParentComponent), app)
+      render(
+        h(ParentComponent, { a: 100, onMyEvent: (val) => alert('XXX' + val) }),
+        app
+      )
     </script>
   </body>
 </html>
