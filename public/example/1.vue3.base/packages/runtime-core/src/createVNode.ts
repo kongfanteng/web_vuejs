@@ -45,6 +45,8 @@ export function createVNode(type, props, children = null) {
     if (Array.isArray(children)) {
       vnode.children = normalizeChildren(children)
       type = ShapeFlags.ARRAY_CHILDREN
+    } else if (isObject(children)) {
+      type = ShapeFlags.SLOTS_CHILDREN // $slots 可以获取到属性
     } else {
       vnode.children = String(children)
       type = ShapeFlags.TEXT_CHILDREN

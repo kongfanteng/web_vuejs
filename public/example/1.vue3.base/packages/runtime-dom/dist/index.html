@@ -8,51 +8,44 @@
   <body>
     <div id="app"></div>
     <script type="module">
-      import {
-        h,
-        render,
-        Text,
-        reactive,
-        toRefs,
-        computed,
-      } from './runtime-dom.js'
-      const ChildComponent = {
-        props: {
-          count: Object,
-        },
-        render(proxy) {
-          return h(Text, proxy.count.count)
-        },
-      }
+      import { h, render, Fragment } from './runtime-dom.js'
 
-      const ParentComponent = {
-        props: {
-          a: Number,
-        },
-        // setup 1) 可以返回一个对象，作为 proxy 的数据源；2）返回一个渲染函数可以用作渲染逻辑；
-        setup(props, ctx) {
-          const state = reactive({ count: props.a })
-          const double = computed(() => state.count * 2)
-          return () =>
-            h('div', [
-              h(ChildComponent, { count: { count: state.count } }),
-              h(
-                'button',
-                {
-                  onClick: () => {
-                    // state.count++
-                    ctx.emit('myEvent', 100)
-                  },
-                },
-                '点我啊' + double.value
-              ),
-            ])
+      const MyComponent = {
+        render(proxy) {
+          console.log('proxy:', proxy)
+          return h(Fragment, [
+            h('div', proxy.$slots.header('head')),
+            h('div', proxy.$slots.defalut()),
+            h('div', proxy.$slots.footer()),
+          ])
         },
       }
       render(
-        h(ParentComponent, { a: 100, onMyEvent: (val) => alert('XXX' + val) }),
+        h(
+          MyComponent,
+          {},
+          {
+            defalut: () => h('div', 'hello'),
+            header: (title) => h('div', title),
+            footer: () => h('div', 'footer'),
+          }
+        ),
         app
       )
+      setTimeout(() => {
+        render(
+          h(
+            MyComponent,
+            {},
+            {
+              defalut: () => h('div', 'hello'),
+              header: (title) => h('div', title),
+              footer: () => h('div', 'footer'),
+            }
+          ),
+          app
+        )
+      }, 1000)
     </script>
   </body>
 </html>

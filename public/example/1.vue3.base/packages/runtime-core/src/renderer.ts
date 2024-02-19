@@ -330,6 +330,9 @@ export function createRenderer(options) {
     instance.next = null
     instance.vnode = next // 这里为了保证 vnode 更新
     updateProps(instance.props, next.props)
+    // instance.slots = next.children; 注意：用户解构使用 slots 可能导致render方法重新调用，获取的是老 slots;
+    Object.assign(instance.slots, next.children)
+    // 应该将 slots 中所有属性移除掉，再添加新的
   }
 
   function setupRenderEffect(instance, container) {
@@ -371,6 +374,11 @@ export function createRenderer(options) {
   function shouldComponentUpdate(n1, n2) {
     const prevProps = n1.props
     const nextProps = n2.props
+
+    let c1 = n1.children
+    let c2 = n2.children
+    if (Object.keys(c1).length > 0 || Object.keys(c2).length > 0) return true
+
     return hasChangedProps(prevProps, nextProps)
   }
 

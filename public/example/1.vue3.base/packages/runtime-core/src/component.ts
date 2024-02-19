@@ -14,16 +14,23 @@ export function createInstance(n2) {
     propsOptions: n2.type.props, // 用户传递的 props
     props: {},
     attrs: {},
+    slots: {},
+    render: null,
     proxy: null, // 组件的代理对象 proxyRefs
   }
   return instance
 }
 
+function initSlots(instance, children) {
+  instance.slots = children
+}
+
 export function setupComponent(instance) {
-  const { type, props } = instance.vnode
+  const { type, props, children } = instance.vnode
   const publicProperties = {
     $attrs: (instance) => instance.attrs,
     $props: (instance) => instance.props,
+    $slots: (instance) => instance.slots,
   }
   instance.proxy = new Proxy(instance, {
     get: (target, key) => {
@@ -56,6 +63,7 @@ export function setupComponent(instance) {
     },
   })
   initProps(instance, props)
+  initSlots(instance, children)
 
   const setup = type.setup
   if (setup) {
