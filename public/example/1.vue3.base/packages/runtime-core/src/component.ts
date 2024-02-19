@@ -1,8 +1,10 @@
-import { reactive } from '@vue/reactivity'
+import { proxyRefs, reactive } from '@vue/reactivity'
 import { initProps } from './componentProps'
+import { isObject } from '@vue/shared'
 
 export function createInstance(n2) {
   const instance = {
+    setupState: {},
     // 组件的实例，记录组件中属性
     state: {},
     isMounted: false, // 是否挂载成功
@@ -25,9 +27,11 @@ export function setupComponent(instance) {
   }
   instance.proxy = new Proxy(instance, {
     get: (target, key) => {
-      const { state, props } = target
+      const { state, props, setupState } = target
       if (key in state) {
         return state[key]
+      } else if (key in setupState) {
+        return setupState[key]
       } else if (key in props) {
         return props[key]
       }
@@ -37,9 +41,12 @@ export function setupComponent(instance) {
       }
     },
     set: (target, key, value) => {
-      const { state, props } = target
+      const { state, props, setupState } = target
       if (key in state) {
         state[key] = value
+        return true
+      } else if (key in setupState) {
+        setupState[key] = value
         return true
       } else if (key in props) {
         console.warn(`props[${key as string}] is readonly`)
@@ -49,6 +56,16 @@ export function setupComponent(instance) {
     },
   })
   initProps(instance, props)
+
+  const setup = type.setup
+  if (setup) {
+    const setupResult = setup()
+    if (isObject(setupResult)) {
+      // 返回 setup 提供的数据源头
+      instance.setupState = proxyRefs(setupResult)
+    }
+  }
+
   const data = type.data
   if (data) {
     instance.state = reactive(data())
