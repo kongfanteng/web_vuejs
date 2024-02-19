@@ -1,4 +1,4 @@
-import { ShapeFlags } from '@vue/shared'
+import { ShapeFlags, invokeHooks } from '@vue/shared'
 import { Fragment, Text, convert, isSameVnode } from './createVNode'
 import { ReactiveEffect } from '@vue/reactivity'
 import { queueJob } from './scheduler'
@@ -36,6 +36,21 @@ export function createRenderer(options) {
   }
 
   const unmount = (vnode) => {
+    const { shapeFlag } = vnode
+
+    if (vnode.type === Fragment) {
+      // 文档碎片
+      return unmountChildren(vnode.children)
+    }
+    // 如果是组件，移除的是 subTree
+    if (shapeFlag & ShapeFlags.COMPONENT) {
+      const { bum, um } = vnode.component
+      bum && invokeHooks(bum)
+      unmount(vnode.component.subTree)
+      um && invokeHooks(um)
+      return
+    }
+
     // 后面要卸载的元素可能不是元素
     hostRemove(vnode.el)
   }
@@ -337,20 +352,27 @@ export function createRenderer(options) {
 
   function setupRenderEffect(instance, container) {
     const componentUpdateFn = () => {
+      const { m, bm } = instance
       if (!instance.isMounted) {
+        // 初次渲染
+        bm && invokeHooks(instance.bm)
         const subTree = instance.render.call(instance.proxy, instance.proxy)
         instance.subTree = subTree
         patch(null, subTree, container)
         instance.isMounted = true
+        m && invokeHooks(m)
       } else {
+        const { bu, u } = instance
         let next = instance.next
         if (next) {
           updateComponentPreRender(instance, next)
         }
+        bu && invokeHooks(bu)
 
         // 组件更新，自身的状态变更了要更新子树
         const subTree = instance.render.call(instance.proxy, instance.proxy)
         patch(instance.subTree, subTree, container)
+        u && invokeHooks(u)
         instance.subTree = subTree
       }
     }

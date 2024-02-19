@@ -2,6 +2,11 @@ import { proxyRefs, reactive } from '@vue/reactivity'
 import { initProps } from './componentProps'
 import { isFunction, isObject } from '@vue/shared'
 
+export let currentInstance = null
+
+export const setCurrentInstance = (instance) => (currentInstance = instance)
+export const getCurrentInstance = () => currentInstance
+
 export function createInstance(n2) {
   const instance = {
     setupState: {},
@@ -67,6 +72,7 @@ export function setupComponent(instance) {
 
   const setup = type.setup
   if (setup) {
+    setCurrentInstance(instance)
     const setupResult = setup(instance.props, {
       attrs: instance.attrs,
       emit: (eventName, ...args) => {
@@ -78,6 +84,7 @@ export function setupComponent(instance) {
       slots: instance.slots,
       expose: () => {},
     })
+    setCurrentInstance(null)
     if (isObject(setupResult)) {
       // 返回 setup 提供的数据源头
       instance.setupState = proxyRefs(setupResult)

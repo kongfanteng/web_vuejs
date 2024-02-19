@@ -12,6 +12,12 @@ export function isNumber(val) {
   return typeof val === 'number'
 }
 
+export const invokeHooks = (fns) => {
+  for (let i = 0; i < fns.length; i++) {
+    fns[i]()
+  }
+}
+
 export enum ShapeFlags {
   ELEMENT = 1, // 元素
   FUNCTIONAL_COMPONENT = 1 << 1, // 2

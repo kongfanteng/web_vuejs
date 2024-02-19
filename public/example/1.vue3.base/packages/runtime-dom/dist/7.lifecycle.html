@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      import {
+        onMounted,
+        onUpdated,
+        onUnmounted,
+        h,
+        render,
+        Fragment,
+      } from './runtime-dom.js'
+
+      function useLifecycle() {
+        onMounted(() => {
+          console.log('挂载完成 mounted')
+        })
+        onMounted(() => {
+          console.log('挂载完成 mounted')
+        })
+        onUpdated(() => {
+          console.log('更新完成 Updated')
+        })
+        onUnmounted(() => {
+          console.log('卸载完成 Unmounted')
+        })
+      }
+
+      const MyComponent = {
+        setup() {
+          useLifecycle()
+          return {}
+        },
+        render(proxy) {
+          return h(Fragment, [
+            h('div', proxy.$slots.header('header')),
+            h('div', proxy.$slots.defalut()),
+            h('div', proxy.$slots.footer()),
+          ])
+        },
+      }
+      render(
+        h(
+          MyComponent,
+          {},
+          {
+            defalut: () => h('div', 'hello'),
+            header: (title) => h('div', title),
+            footer: () => h('div', 'footer'),
+          }
+        ),
+        app
+      )
+      render(null, app)
+      setTimeout(() => {
+        render(
+          h(
+            MyComponent,
+            {},
+            {
+              defalut: () => h('div', 'hello'),
+              header: (title) => h('div', title),
+              footer: () => h('div', 'footer'),
+            }
+          ),
+          app
+        )
+      }, 1000)
+    </script>
+  </body>
+</html>
