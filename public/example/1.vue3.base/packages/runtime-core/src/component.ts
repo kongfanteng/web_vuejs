@@ -7,7 +7,7 @@ export let currentInstance = null
 export const setCurrentInstance = (instance) => (currentInstance = instance)
 export const getCurrentInstance = () => currentInstance
 
-export function createInstance (n2, parentComponent) {
+export function createInstance(n2, parentComponent) {
   const instance = {
     setupState: {},
     // 组件的实例，记录组件中属性
@@ -20,6 +20,7 @@ export function createInstance (n2, parentComponent) {
     props: {},
     attrs: {},
     slots: {},
+    ctx: {} as any,
     parent: parentComponent, // 标记父组件
     provides: parentComponent ? parentComponent.provides : Object.create(null),
     render: null,

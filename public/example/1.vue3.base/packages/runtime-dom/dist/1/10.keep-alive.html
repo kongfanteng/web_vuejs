@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      import {
+        KeepAlive,
+        onMounted,
+        onUnmounted,
+        render,
+        ref,
+        h,
+        getCurrentInstance,
+      } from '../runtime-dom.js'
+
+      const MyComponent1 = {
+        setup() {
+          onMounted(() => {
+            console.log(' MyComponent1 Mounted')
+          })
+          onUnmounted(() => {
+            console.log(' MyComponent1 Unmounted') // 未触发
+          })
+          return {}
+        },
+        render: () => h('h1', 'Hello'),
+      }
+
+      const MyComponent2 = {
+        setup() {
+          onMounted(() => {
+            console.log(' MyComponent2 Mounted')
+          })
+          onUnmounted(() => {
+            console.log(' MyComponent2 Unmounted')
+          })
+          return {}
+        },
+        render: () => h('h1', 'World'),
+      }
+
+      render(
+        h(
+          KeepAlive,
+          { max: 2 },
+          {
+            default: () => h(MyComponent1),
+          }
+        ),
+        app
+      )
+      setTimeout(() => {
+        render(
+          h(
+            KeepAlive,
+            { max: 2 },
+            {
+              default: () => h(MyComponent2),
+            }
+          ),
+          app
+        )
+      }, 1000)
+      setTimeout(() => {
+        render(
+          h(
+            KeepAlive,
+            { max: 2 },
+            {
+              default: () => h(MyComponent1),
+            }
+          ),
+          app
+        )
+      }, 2000)
+    </script>
+  </body>
+</html>

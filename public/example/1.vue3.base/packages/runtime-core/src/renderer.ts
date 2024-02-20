@@ -4,6 +4,7 @@ import { ReactiveEffect } from '@vue/reactivity'
 import { queueJob } from './scheduler'
 import { createInstance, setupComponent } from './component'
 import { hasChangedProps, updateProps } from './componentProps'
+import { isKeepAlive } from './keepAlive'
 
 export function createRenderer(options) {
   // 此方法并不关心  options 有谁提供
@@ -28,26 +29,31 @@ export function createRenderer(options) {
     }
   }
 
-  const unmountChildren = (children) => {
+  const unmountChildren = (children, parentComponent) => {
     for (let i = 0; i < children.length; i++) {
       // 递归调用 patch 方法，卸载元素
-      unmount(children[i])
+      unmount(children[i], parentComponent)
     }
   }
 
-  const unmount = (vnode) => {
+  const unmount = (vnode, parentComponent) => {
     const { shapeFlag } = vnode
 
     if (vnode.type === Fragment) {
       // 文档碎片
-      return unmountChildren(vnode.children)
+      return unmountChildren(vnode.children, parentComponent)
     }
+
+    if (shapeFlag & ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE) {
+      return parentComponent.ctx.deactivated(vnode)
+    }
+
     // 如果是组件，移除的是 subTree
     if (shapeFlag & ShapeFlags.COMPONENT) {
       const { bum, um } = vnode.component
       bum && invokeHooks(bum)
-      unmount(vnode.component.subTree)
-      um && invokeHooks(um)
+      unmount(vnode.component.subTree, parentComponent)
+      um && invokeHooks(um) // 删除的时候需要异步方法
       return
     }
 
@@ -184,7 +190,7 @@ export function createRenderer(options) {
       while (i <= e1) {
         // 如果 e2 后面没有值，说明是向后插入
         // 如果 e2 后面有值，说明是向前插入
-        unmount(c1[i])
+        unmount(c1[i], parentComponent)
         i++
       }
     }
@@ -206,7 +212,7 @@ export function createRenderer(options) {
       const child = c1[i]
       let newIndex = keyToNewIndexMap.get(child.key)
       if (newIndex == undefined) {
-        unmount(child)
+        unmount(child, parentComponent)
       } else {
         newIndexToOldIndexMap[newIndex - s2] = i + 1 // 默认值是 0
         // 老的里面有新的里面也有，需要 diff 算法，比较两个节点属性差异
@@ -278,7 +284,7 @@ export function createRenderer(options) {
     if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
       if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
         // 1. （文本 -> 数组）；文本删除掉，换成数组；
-        unmountChildren(c1)
+        unmountChildren(c1, parentComponent)
       }
       if (c1 !== c2) {
         // 2. （文本 -> 空）；清空文本；（文本 -> 文本）；用新文本换老文本；
@@ -291,7 +297,7 @@ export function createRenderer(options) {
           patchKeyChildren(c1, c2, el, parentComponent)
         } else {
           // 4. （数组 -> 文本）（数组 -> 空）移除数组，换成文本；
-          unmountChildren(c1)
+          unmountChildren(c1, parentComponent)
         }
       } else {
         if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
@@ -365,6 +371,7 @@ export function createRenderer(options) {
         const { bu, u } = instance
         let next = instance.next
         if (next) {
+          // 渲染前的更新
           updateComponentPreRender(instance, next)
         }
         bu && invokeHooks(bu)
@@ -387,6 +394,18 @@ export function createRenderer(options) {
   function mountComponent(n2, container, anchor, parentComponent) {
     // 1）给组件生成一个实例 instance
     const instance = (n2.component = createInstance(n2, parentComponent))
+
+    if (isKeepAlive(n2)) {
+      instance.ctx.renderer = {
+        createElement: hostCreateElement,
+        move(vnode, container) {
+          hostInsert(vnode.component.subTree.el, container)
+        },
+        patch,
+        unmount,
+      }
+    }
+
     // 2）初始化实例属性 props attr slots
     setupComponent(instance)
     // 3）生成一个 effect 并调用渲染
@@ -420,7 +439,11 @@ export function createRenderer(options) {
 
   function processComponent(n1, n2, container, anchor, parentComponent) {
     if (n1 == null) {
-      mountComponent(n2, container, anchor, parentComponent)
+      if (n2.shapeFlag & ShapeFlags.COMPONENT_KEPT_ALIVE) {
+        parentComponent.ctx.activated(n2, container)
+      } else {
+        mountComponent(n2, container, anchor, parentComponent)
+      }
     } else {
       patchComponent(n1, n2, container)
     }
@@ -430,7 +453,7 @@ export function createRenderer(options) {
   const patch = (n1, n2, container, anchor = null, parentComponent = null) => {
     // n1 和 n2 是不是相同的节点，如果不是相同节点直接删除掉，换新的
     if (n1 && !isSameVnode(n1, n2)) {
-      unmount(n1) // 不是初始化，意味更新
+      unmount(n1, parentComponent) // 不是初始化，意味更新
       n1 = null // 删除之前的，继续走初始化流程
     }
     const { type, shapeFlag } = n2
@@ -457,7 +480,7 @@ export function createRenderer(options) {
       // 通过 vdom 创建真实 DOM 插入到容器中
 
       if (vnode == null) {
-        unmount(container._vnode) // 删掉容器上对应的 DOM 元素
+        unmount(container._vnode, null) // 删掉容器上对应的 DOM 元素
       } else {
         const pervVnode = container._vnode || null
         const nextVnode = vnode
