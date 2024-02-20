@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      import {
+        provide,
+        inject,
+        render,
+        ref,
+        h,
+        getCurrentInstance,
+      } from './runtime-dom.js'
+
+      // provide-inject 常用组件库、第三方库编写
+      // form -> form-item -> el-input
+      // 缺点：容易重名；
+      // Vue2 实现原理：不停向上找；
+      // Vue3 实现原理：每次声明子组件的时候，把父组件提供属性绑定到子组件上；
+
+      const ChildComponent = {
+        setup() {
+          const name = inject('key')
+          const aa = inject('aa', '1234')
+          return () => {
+            return h('div', name.value + aa)
+          }
+        },
+      }
+
+      const ParentComponent = {
+        setup() {
+          const name = ref('kft')
+          provide('key', name)
+          setTimeout(() => {
+            name.value = 'xxx'
+          }, 1000)
+          return () => {
+            return h(ChildComponent)
+          }
+        },
+      }
+
+      render(h(ParentComponent), app)
+    </script>
+  </body>
+</html>
