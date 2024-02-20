@@ -1,7 +1,7 @@
 import { isObject } from '@vue/shared'
 import { createVNode, isVNode } from './createVNode'
 
-export function h(type, propsOrChildren, children) {
+export function h(type, propsOrChildren?, children?) {
   // createElement 用户使用的创建虚拟 DOM 方法
   const len = arguments.length
   if (len == 2) {

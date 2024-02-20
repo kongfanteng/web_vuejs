@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      import { defineAsyncComponent, h, render } from './runtime-dom.js'
+
+      // let MyComponent = defineAsyncComponent(() => {
+      //   // return import('./c.js') // 1)
+      //   // 2)
+      //   return new Promise((resolve) => {
+      //     setTimeout(() => {
+      //       resolve({
+      //         render: () => h('div', null, 'hello world'),
+      //       })
+      //     }, 1000)
+      //   })
+      // })
+      let index = 0
+      let MyComponent = defineAsyncComponent({
+        loader: () =>
+          new Promise((resolve, reject) => {
+            setTimeout(() => {
+              if (++index === 5) {
+                resolve({
+                  render: () => h('div', null, 'hello world'),
+                })
+              } else {
+                reject({ err: 'reload' })
+              }
+            }, 3000)
+          }),
+        timeout: 2000,
+        errorComponent: {
+          render: () => h('div', 'error~~~~~'),
+        },
+        delay: 500,
+        loadingComponent: {
+          render: () => h('div', 'loading~~~~~'),
+        },
+        onError(err, retry, fail, attampts) {
+          console.log(err)
+          retry()
+        },
+      })
+
+      render(h(MyComponent), app)
+    </script>
+  </body>
+</html>
