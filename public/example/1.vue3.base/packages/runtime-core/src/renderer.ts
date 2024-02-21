@@ -58,7 +58,19 @@ export function createRenderer(options) {
     }
 
     // 后面要卸载的元素可能不是元素
-    hostRemove(vnode.el)
+    remove(vnode)
+  }
+
+  function remove(vnode) {
+    const { transition, el } = vnode
+    const performRemove = () => {
+      hostRemove(el)
+    }
+    if (transition.leave) {
+      transition.leave(el, performRemove)
+    } else {
+      performRemove()
+    }
   }
 
   const mountElement = (vnode, container, anchor, parentComponent) => {
@@ -77,7 +89,16 @@ export function createRenderer(options) {
     } else {
       hostSetElementText(el, children)
     }
+
+    if (vnode.transition) {
+      vnode.transition.beforeEnter(el)
+    }
+
     hostInsert(el, container, anchor) // 将元素插入到父级中
+
+    if (vnode.transition) {
+      vnode.transition.enter(el)
+    }
   }
 
   const patchProps = (oldProps, newProps, el) => {

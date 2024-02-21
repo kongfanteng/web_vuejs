@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      import { Transition, h, render } from '../runtime-dom.js'
+
+      const props = {
+        onBeforeEnter(el) {
+          console.log('onBeforeEnter', el)
+        },
+        onEnter(el, done) {
+          console.log('onEnter', el)
+          done() // 调用 done() 表示瞬间移除 active 的状态
+        },
+        onLeave(el) {
+          console.log('onLeave', el) // 不写 done() 表示默认动画结束后移除 DOM
+        },
+      }
+
+      render(
+        Transition(props, {
+          slots: {
+            default: () =>
+              h(
+                'div',
+                {
+                  style: {
+                    background: '#f00',
+                    width: '100px',
+                    height: '100px',
+                  },
+                },
+                'hello world'
+              ),
+          },
+        }),
+        app
+      )
+
+      setTimeout(() => {
+        render(
+          Transition(props, {
+            slots: {
+              default: () =>
+                h(
+                  'p',
+                  {
+                    style: {
+                      background: 'purple',
+                      width: '100px',
+                      height: '100px',
+                    },
+                  },
+                  'hello world'
+                ),
+            },
+          }),
+          app
+        )
+      }, 2000)
+    </script>
+    <style>
+      .v-enter-active,
+      .v-leave-active {
+        transition: opacity 0.5s ease;
+      }
+      .v-enter-from,
+      .v-leave-to {
+        opacity: 0;
+      }
+    </style>
+  </body>
+</html>
