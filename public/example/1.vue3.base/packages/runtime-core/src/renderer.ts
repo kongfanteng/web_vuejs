@@ -1,4 +1,4 @@
-import { ShapeFlags, invokeHooks } from '@vue/shared'
+import { PatchFlags, ShapeFlags, invokeHooks } from '@vue/shared'
 import { Fragment, Text, convert, isSameVnode } from './createVNode'
 import { ReactiveEffect } from '@vue/reactivity'
 import { queueJob } from './scheduler'
@@ -337,8 +337,32 @@ export function createRenderer(options) {
   const patchElement = (n1, n2, container, parentComponent) => {
     // 更新逻辑
     let el = (n2.el = n1.el)
-    patchProps(n1.props || {}, n2.props || {}, el)
-    patchChildren(n1, n2, el, parentComponent)
+
+    if (n2.patchFlag > 0) {
+      // 靶向更新
+      if (n2.patchFlag & PatchFlags.TEXT) {
+        if (n1.children !== n2.children) {
+          hostSetElementText(el, n2.children)
+        }
+      }
+    } else {
+      patchProps(n1.props || {}, n2.props || {}, el)
+    }
+    if (n2.synamicChildren) {
+      patchBlockChildren(n1, n2, el, parentComponent)
+    } else {
+      patchChildren(n1, n2, el, parentComponent)
+    }
+  }
+  function patchBlockChildren(n1, n2, el, parentComponent) {
+    for (let i = 0; i < n2.synamicChildren.length; i++) {
+      patchElement(
+        n1.synamicChildren[i],
+        n2.synamicChildren[i],
+        el,
+        parentComponent
+      )
+    }
   }
 
   function processElement(n1, n2, container, anchor, parentComponent) {

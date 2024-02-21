@@ -22,7 +22,7 @@ export function normalizeChildren(children) {
   return children.map(convert)
 }
 
-export function createVNode(type, props, children = null) {
+export function createVNode(type, props, children = null, patchFlag = 0) {
   // React.createElement
   const shapeFlag = isString(type)
     ? ShapeFlags.ELEMENT // 元素
@@ -38,6 +38,12 @@ export function createVNode(type, props, children = null) {
     key: props && props.key,
     el: null,
     children,
+    patchFlag,
+    dynamicChildren: null,
+  }
+
+  if (currentBlock && vnode.patchFlag > 0) {
+    currentBlock.push(vnode)
   }
 
   if (children) {
@@ -54,4 +60,24 @@ export function createVNode(type, props, children = null) {
     vnode.shapeFlag |= type
   }
   return vnode
+}
+
+let currentBlock = null
+export function openBlock() {
+  currentBlock = []
+}
+export function closeBlock() {
+  currentBlock = null
+}
+
+export function createElementBlock(type, props?, children?, patchFlag?) {
+  const vnode = createVNode(type, props, children, patchFlag)
+  vnode.dynamicChildren = currentBlock // 动态组件
+  closeBlock() // 复制后结束收集操作
+  return vnode
+}
+
+export { createVNode as createElementVNode }
+export function toDisplayString(val) {
+  return isString(val) ? val : isObject(val) ? JSON.stringify(val) : String(val)
 }
