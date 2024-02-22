@@ -9,12 +9,7 @@
     <div id="app"></div>
     <script type="module">
       import { compile } from './compiler-core.js'
-
-      // 模板转ast语法树
-      // 虚拟DOM，将真实DOM转换成对象
-      // ast 将某种语法树转换成对象（语法层面的抽象）
-
-      const render = compile(`hello`)
+      const render = compile(`hello {{ greeting }}`)
     </script>
   </body>
 </html>

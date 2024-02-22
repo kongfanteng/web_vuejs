@@ -22,9 +22,27 @@ function getCursor(context) {
   return { line, column, offset }
 }
 
+function advancePositionWithMutation(context, str, endIndex) {
+  let linesCount = 0
+  let returnLine = -1
+  for (let i = 0; i < endIndex; i++) {
+    if (str.charCodeAt(i) === 10) {
+      linesCount++
+      returnLine = 1 // 记录当前换行的位置
+    }
+  }
+  context.line += linesCount // 计算行号
+  context.offset += endIndex // 计算偏移量
+  // 计算列信息
+  context.column =
+    returnLine === -1 ? context.column + endIndex : endIndex - returnLine
+}
+
 function advanceBy(context, endIndex) {
   let str = context.source
   context.source = str.slice(endIndex) // 截取掉前面解析过的内容
+  // 更新上下文信息，根据结果索引遍历字符串，有多少个换行
+  advancePositionWithMutation(context, str, endIndex)
 }
 
 function parseTextData(context, endIndex) {
@@ -46,15 +64,56 @@ function parserText(context) {
   // 需要获取文本的信息和文本的内容
   const start = getCursor(context)
   const content = parseTextData(context, endIndex)
-  console.log('parserTxt:', content)
-  debugger
   return {
     type: NodeTypes.TEXT,
     content,
-    loc: {
-      start,
-      end: {},
+    loc: getSelection(context, start),
+  }
+}
+
+function getSelection(context, start, end?) {
+  if (!end) {
+    end = getCursor(context)
+  }
+  return {
+    start,
+    end,
+    source: context.originalSource.slice(start.offset, end.offset),
+  }
+}
+
+function parseInterpolation(context) {
+  const start = getCursor(context) // 表达式开始的位置
+  const endIndex = context.source.indexOf('}}')
+
+  // 例：{{ greeting }}
+  advanceBy(context, 2)
+  const innerStart = getCursor(context) // 内部开始的位置
+  const innerEnd = getCursor(context) // 内部结束的位置
+
+  const contentIndex = endIndex - 2
+
+  const preTrimContent = parseTextData(context, contentIndex) // 拿到文本
+  const content = preTrimContent.trim()
+
+  const startOffset = preTrimContent.indexOf(content)
+
+  // 更新开始位置
+  if (startOffset > 0)
+    advancePositionWithMutation(innerStart, preTrimContent, startOffset)
+  const endOffset = content.length + startOffset
+  // 更新结束位置
+  advancePositionWithMutation(innerEnd, preTrimContent, endOffset)
+  advanceBy(context, 2)
+
+  return {
+    type: NodeTypes.INTERPOLATION,
+    content: {
+      type: NodeTypes.SIMPLE_EXPRESSION,
+      content,
+      loc: getSelection(context, innerStart, innerEnd),
     },
+    loc: getSelection(context, start),
   }
 }
 
@@ -72,6 +131,7 @@ function parseChildren(context) {
       }
     } else if (str.startsWith('{{')) {
       // 表达式
+      node = parseInterpolation(context)
     } else {
       // 文本
       node = parserText(context)
