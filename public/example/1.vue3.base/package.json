@@ -5,7 +5,8 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "node scripts/dev.js runtime-dom -f esm"
+    "dev": "node scripts/dev.js compiler-core -f esm",
+    "dev-old1": "node scripts/dev.js runtime-dom -f esm"
   },
   "keywords": [],
   "author": "",
