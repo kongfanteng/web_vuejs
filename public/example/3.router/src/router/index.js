@@ -1,10 +1,7 @@
-import {
-  createRouter,
-  createWebHistory,
-  createWebHashHistory,
-} from '@/vue-router'
+import { createRouter, createWebHistory } from '@/vue-router'
 import HomeView from '../views/HomeView.vue'
 import AboutView from '../views/AboutView.vue'
+import MyView from '../views/MyView.vue'
 
 const routes = [
   {
@@ -20,16 +17,17 @@ const routes = [
   {
     path: '/my',
     name: 'my',
+    component: MyView,
     children: [
       {
         path: 'a',
-        name: 'a',
-        component: AboutView,
+        name: 'mya',
+        component: { render: () => <a>a页面</a> },
       },
       {
         path: 'b',
-        name: 'b',
-        component: AboutView,
+        name: 'myb',
+        component: { render: () => <a>b页面</a> },
       },
     ],
   },
@@ -37,7 +35,7 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
-  routes
+  routes,
 })
 
 export default router

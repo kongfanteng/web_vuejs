@@ -5,9 +5,9 @@
 - [Learning](https://www.processon.com/mindmap/63ac109f6592974cd49ff115)
 - `code public/example/3.router` -> `pnpm serve` -> 根据 process 敲代码 -> 相对路径 -> 源码 -> 调试
 - 举例
-  - router.P(1105~1172).
+  - router2.P(1188~1208).
   - [src/2/4.md](src/2/4.md)
   - gitDiff-相对路径-源码-add-循环-提交-完成
-  - 提交-feat: router
+  - 提交-feat: router2
 - [模板解析网站](https://template-explorer.vuejs.org)
 - [astexplorer.net](https://astexplorer.net/)
