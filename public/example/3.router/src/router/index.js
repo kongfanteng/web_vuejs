@@ -7,6 +7,9 @@ const routes = [
   {
     path: '/',
     name: 'home',
+    beforeEnter() {
+      console.log('配置进入前 beforeEnter')
+    },
     component: HomeView,
   },
   {
@@ -22,7 +25,15 @@ const routes = [
       {
         path: 'a',
         name: 'mya',
-        component: { render: () => <a>a页面</a> },
+        component: {
+          render: () => <a>a页面</a>,
+          beforeRouteLeave() {
+            console.log('my-leave-a beforeRouteLeave')
+            return new Promise((resolve, reject) =>
+              setTimeout(() => resolve(), 1000)
+            )
+          },
+        },
       },
       {
         path: 'b',

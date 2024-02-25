@@ -7,3 +7,10 @@
     <router-view></router-view>
   </div>
 </template>
+<script>
+export default (await import('vue')).defineComponent({
+  beforeRouteLeave() {
+    console.log('my-leave')
+  },
+})
+</script>

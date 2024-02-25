@@ -80,9 +80,7 @@ export function createRouter({ history, routes }) {
     ready = true
     history.listen((to, from) => {
       to = matcher.resolve(to)
-      console.log('to:', to)
       from = currentLocation.value
-      debugger
       finalNavigation(to, from)
     })
   }
@@ -97,12 +95,125 @@ export function createRouter({ history, routes }) {
     markReady()
   }
 
+  function extractRecords(to, from) {
+    const leavingRecords = []
+    const updatingRecords = []
+    const enteringRecords = []
+    let len = Math.max(to.matched.length, from.matched.length) // 哪个匹配多，哪个为准；
+    for (let i = 0; i < len; i++) {
+      const fromRecord = from.matched[i]
+      if (fromRecord) {
+        if (to.matched.find((record) => record.path === fromRecord.path)) {
+          updatingRecords.push(fromRecord)
+        } else {
+          leavingRecords.push(fromRecord)
+        }
+      }
+      const toRecord = to.matched[i]
+      if (toRecord) {
+        if (!from.matched.find((record) => record.path === toRecord.path)) {
+          enteringRecords.push(toRecord)
+        }
+      }
+    }
+    return [leavingRecords, updatingRecords, enteringRecords]
+  }
+
+  // my -> beforeRouteleave my/a -> beforeRouteleave
+  function guardToPromise(guard, to, from, record) {
+    return () =>
+      new Promise((resolve, reject) => {
+        // 返回函数的目的：可以组合多个 guard
+        const next = resolve
+        const r = guard.call(record, to, from, next)
+        Promise.resolve(r).then(next) // 等待 guard 执行完毕后自动调用 next
+      })
+  }
+
+  function extractGuards(guardType, matched, to, from) {
+    let guards = []
+    for (let record of matched) {
+      let comp = record.components.default
+      const guard = comp[guardType]
+      guard && guards.push(guardToPromise(guard, to, from))
+    }
+    return guards
+  }
+
+  function runGuardQueue(guards) {
+    return guards.reduce(
+      (promise, guard) => promise.then(() => guard()),
+      Promise.resolve()
+    )
+  }
+
+  function navigate(to, from) {
+    const [leavingRecords, updatingRecords, enteringRecords] = extractRecords(
+      to,
+      from
+    )
+
+    let guards = extractGuards(
+      'beforeRouteLeave',
+      leavingRecords.reverse(),
+      to,
+      from
+    )
+    return runGuardQueue(guards)
+      .then(() => {
+        guards = []
+        for (let guard of beforeGuards.list()) {
+          guards.push(guardToPromise(guard))
+        }
+        return runGuardQueue(guards) // 全局钩子
+      })
+      .then(() => {
+        let guards = extractGuards(
+          'beforeRouteUpdate',
+          updatingRecords.reverse(),
+          to,
+          from
+        )
+        return runGuardQueue(guards)
+      })
+      .then(() => {
+        guards = []
+        for (let record of to.matched) {
+          const enterGuard = record.beforeEnter
+          if (enterGuard) {
+            guards.push(guardToPromise(enterGuard))
+          }
+        }
+        return runGuardQueue(guards)
+      })
+      .then(() => {
+        guards = extractGuards('beforeRouteEnter', enteringRecords)
+        return runGuardQueue(guards)
+      })
+      .then(() => {
+        guards = []
+        for (let guard of beforeResolveGuards.list()) {
+          guards.push(guardToPromise(guard))
+        }
+        return runGuardQueue(guards) // 全局钩子
+      })
+    // 这里需要将函数组合起来执行 compose
+  }
+
   function pushWithRedirect(to) {
     const from = currentLocation.value
     to = matcher.resolve(to.value || to)
     // 有 to 和 from 监控路径的变化，后续可以更新路径
     // 跳转路由+监听
-    finalNavigation(to, from)
+    navigate(to, from)
+      .then(() => {
+        return finalNavigation(to, from)
+      })
+      .then(() => {
+        for (let guard of afterGuards.list()) {
+          guard(to, from)
+        }
+      })
   }
   function push(to) {
     return pushWithRedirect(to)
@@ -111,6 +222,20 @@ export function createRouter({ history, routes }) {
     // 第一次加载路由，根据路径找到组件将他放入到 START_LOCATION 中
     push(history.location) // 默认的跳转
   }
+
+  function useCallbacks() {
+    const handlers = [] // 用户函数
+    const add = (handler) => handlers.push(handler)
+    return {
+      add,
+      list: () => handlers,
+    }
+  }
+
+  const beforeGuards = useCallbacks()
+  const beforeResolveGuards = useCallbacks()
+  const afterGuards = useCallbacks()
+
   // 当用户访问： /my/a -> { path: '/my/a', matched: [ my, my/a ] }
   const router = {
     push,
@@ -126,6 +251,9 @@ export function createRouter({ history, routes }) {
       app.component('RouterView', RouterView)
       // 让所有的子组件可以获取到路由 provide globalProperties
     },
+    beforeEach: beforeGuards.add,
+    beforeResolve: beforeResolveGuards.add,
+    afterEach: afterGuards.add,
   }
   return router
 }
